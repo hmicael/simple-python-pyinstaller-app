@@ -5,7 +5,7 @@ pipeline {
             defaultContainer 'python'
         }
     }
-    
+
     options {
         skipStagesAfterUnstable()
     }
@@ -57,15 +57,63 @@ pipeline {
             }
         }
 
+        Stage("Pubishing") {
+            steps {
+                container('sonar') {
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: 'my.nexus.address',
+                        groupId: 'com.example',
+                        version: version,
+                        repository: 'RepositoryName',
+                        credentialsId: 'CredentialsId',
+                        artifacts: [
+                            [artifactId: projectName,
+                            classifier: '',
+                            file: 'my-service-' + version + '.jar',
+                            type: 'jar']
+                        ]
+                    )
+                }
+            }
+        }
+
         stage('Deliver') {
             steps {
                 sh 'pyinstaller --onefile sources/add2vals.py'
             }
             post {
                 success {
-                    archiveArtifacts 'dist/add2vals*'
+                script {
+                    def projectName = "add2vals"
+
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: '192.168.1.2:31251',
+                        groupId: 'add2vals',
+                        version: "${env.BUILD_ID}-${env.BUID_TIMESTAMP}",
+                        repository: 'simple-python-pyinstaller-app',
+                        credentialsId: 'nexus-login',
+                        artifacts: [
+                            [
+                                artifactId: projectName,
+                                classifier: '',
+                                file: "dist/${projectName}",
+                                type: 'bin'
+                            ]
+                        ]
+                    )
+                }
+                }
+                failure {
+                    echo 'La livraison a échoué. Aucun artefact ne sera publié.'
+                }
+                always {
+                    archiveArtifacts artifacts: 'dist/add2vals*'
                 }
             }
-        }
+            }
     }
 }
