@@ -34,7 +34,7 @@ pipeline {
                     withSonarQubeEnv('sonarqube-server') { 
                         sh '''sonar-scanner \
                             -Dsonar.projectKey=simple-python-pyinstaller-app \
-                            -Dsonar.sources=src/ \
+                            -Dsonar.sources=sources/ \
                             -Dsonar.junit.reportPaths=test-reports/results.xml \
                             -Dsonar.python.coverage.reportPaths=coverage.xml
                         '''
