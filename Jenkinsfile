@@ -1,38 +1,16 @@
 pipeline {
     agent {
         kubernetes {
-            label 'python-agent'
             yamlFile 'k8s-pod.yaml'
             defaultContainer 'python'
         }
     }
     stages {
-        stage("A") {
+        stage("Build) {
             steps {
-                echo "========executing A========"
+                sh 'python -m py_compile sources/add2vals.py sources/calc.py' 
+                stash(name: 'compiled-results', includes: 'sources/*.py*') 
             }
-            post {
-                always {
-                    echo "========always========"
-                }
-                success {
-                    echo "========A executed successfully========"
-                }
-                failure {
-                    echo "========A execution failed========"
-                }
-            }
-        }
-    }
-    post {
-        always {
-            echo "========always========"
-        }
-        success {
-            echo "========pipeline executed successfully========"
-        }
-        failure {
-            echo "========pipeline execution failed========"
         }
     }
 }
