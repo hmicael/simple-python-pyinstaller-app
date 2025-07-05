@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: python
-    image: "python:3.11-slim"
+    image: hmicael/python:3.11-my
     command: 
     - "sleep"
     args: 

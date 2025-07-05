@@ -17,7 +17,6 @@ pipeline {
         }
         stage('Test') {
             steps {
-                sh 'pip install pytest' // optionnel si pas déjà dans l'image
                 sh 'pytest --junit-xml test-reports/results.xml sources/test_calc.py'
             }
             post {
@@ -28,7 +27,6 @@ pipeline {
         }
         stage('Deliver') {
             steps {
-                sh 'pip install pyinstaller'
                 sh 'pyinstaller --onefile sources/add2vals.py'
             }
             post {
