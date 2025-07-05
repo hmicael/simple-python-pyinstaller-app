@@ -71,7 +71,7 @@ pipeline {
                         protocol: 'http',
                         nexusUrl: '192.168.1.2:31251',
                         groupId: 'add2vals',
-                        version: "${env.BUILD_ID}-${env.BUID_TIMESTAMP}",
+                        version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
                         repository: 'simple-python-pyinstaller-app',
                         credentialsId: 'nexus-login',
                         artifacts: [
