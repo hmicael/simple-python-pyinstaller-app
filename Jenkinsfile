@@ -30,13 +30,15 @@ pipeline {
                 SCANNER_HOME = tool 'sonar-scanner-7.1'
             }
             steps {
-                withSonarQubeEnv('sonarqube-server') { 
-                    sh '''$SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectKey=simple-python-pyinstaller-app \
-                        -Dsonar.sources=src/ \
-                        -Dsonar.junit.reportPaths=test-reports/results.xml \
-                        -Dsonar.python.coverage.reportPaths=coverage.xml
-                    '''
+                container('sonar') {
+                    withSonarQubeEnv('sonarqube-server') { 
+                        sh '''sonar-scanner \
+                            -Dsonar.projectKey=simple-python-pyinstaller-app \
+                            -Dsonar.sources=src/ \
+                            -Dsonar.junit.reportPaths=test-reports/results.xml \
+                            -Dsonar.python.coverage.reportPaths=coverage.xml
+                        '''
+                    }
                 }
             }
         }
