@@ -1,5 +1,10 @@
 pipeline{
-    agent any
+    agent {
+        kubernetes {
+            defaultContainer 'python'
+            yamlFile 'k8s-pod.yaml'
+        }
+    }
     stages{
         stage("A"){
             steps{
