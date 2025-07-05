@@ -5,9 +5,11 @@ pipeline {
             defaultContainer 'python'
         }
     }
+    
     options {
         skipStagesAfterUnstable()
     }
+
     stages {
         stage("Build") {
             steps {
@@ -15,6 +17,7 @@ pipeline {
                 stash(name: 'compiled-results', includes: 'sources/*.py*') 
             }
         }
+
         stage('Test') {
             steps {
                 sh 'pytest --junit-xml test-reports/results.xml sources/test_calc.py'
@@ -25,6 +28,7 @@ pipeline {
                 }
             }
         }
+
         stage('SonarQube analysis') {
             environment {
                 SCANNER_HOME = tool 'sonar-scanner-7.1'
@@ -42,15 +46,17 @@ pipeline {
                 }
             }
         }
-        // stage("Quality Gate") {
-        //     steps {
-        //         timeout(time: 1, unit: 'HOURS') {
-        //             // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
-        //             // true = set pipeline to UNSTABLE, false = don't
-        //             waitForQualityGate abortPipeline: true
-        //         }
-        //     }
-        // }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Deliver') {
             steps {
                 sh 'pyinstaller --onefile sources/add2vals.py'
