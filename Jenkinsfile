@@ -96,14 +96,16 @@ pipeline {
 
         stage('Build & Upload Image') {
             steps {
-                script {
-                    docker.withRegistry('http://192.168.1.2:31251/repository/my-docker/', 'nexus-login') {
-                        def imageName = "add2vals"
-                        def imageTag = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
-                        def img = docker.build("${imageName}:${imageTag}")
-                        img.push(imageTag)
-                        image.push("latest")
-                    }
+                container('docker') {
+                    script {
+                        docker.withRegistry('http://192.168.1.2:31251/repository/my-docker/', 'nexus-login') {
+                            def imageName = "add2vals"
+                            def imageTag = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
+                            def img = docker.build("${imageName}:${imageTag}")
+                            img.push(imageTag)
+                            image.push("latest")
+                        }
+                }
                 }
             }
         }

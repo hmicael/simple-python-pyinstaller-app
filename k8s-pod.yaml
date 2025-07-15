@@ -16,3 +16,8 @@ spec:
     - "sleep"
     args: 
     - "99d"
+  - name: docker
+    image: docker:24
+    command:
+      - cat
+    tty: true
