@@ -1,5 +1,10 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-RUN apt-get update \
- && apt-get install -y binutils \
- && pip install pyinstaller pytest
+# Copier le binaire dans le conteneur
+COPY add2vals /usr/local/bin/add2vals
+
+# Rendre exécutable
+RUN chmod +x /usr/local/bin/add2vals
+
+# Point d'entrée par défaut
+ENTRYPOINT ["add2vals"]

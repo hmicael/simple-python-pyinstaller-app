@@ -14,7 +14,7 @@ pipeline {
         stage("Build") {
             steps {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py' 
-                stash(name: 'compiled-results', includes: 'sources/*.py*') 
+                //stash(name: 'compiled-results', includes: 'sources/*.py*') 
             }
         }
 
@@ -63,33 +63,47 @@ pipeline {
             }
             post {
                 success {
-                script {
-                    def projectName = "add2vals"
+                    script {
+                        def projectName = "add2vals"
 
-                    nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'http',
-                        nexusUrl: '192.168.1.2:31251',
-                        groupId: 'add2vals',
-                        version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-                        repository: 'simple-python-pyinstaller-app',
-                        credentialsId: 'nexus-login',
-                        artifacts: [
-                            [
-                                artifactId: projectName,
-                                classifier: '',
-                                file: "dist/${projectName}",
-                                type: 'bin'
+                        nexusArtifactUploader(
+                            nexusVersion: 'nexus3',
+                            protocol: 'http',
+                            nexusUrl: '192.168.1.2:31251',
+                            groupId: 'add2vals',
+                            version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                            repository: 'simple-python-pyinstaller-app',
+                            credentialsId: 'nexus-login',
+                            artifacts: [
+                                [
+                                    artifactId: projectName,
+                                    classifier: '',
+                                    file: "dist/${projectName}",
+                                    type: 'bin'
+                                ]
                             ]
-                        ]
-                    )
-                }
+                        )
+                    }
                 }
                 failure {
                     echo 'La livraison a échoué. Aucun artefact ne sera publié.'
                 }
-                always {
-                    archiveArtifacts artifacts: 'dist/add2vals*'
+                //always {
+                //    archiveArtifacts artifacts: 'dist/add2vals*'
+                //}
+            }
+        }
+
+        stage('Build & Upload Image') {
+            steps {
+                script {
+                    docker.withRegistry('http://192.168.1.2:31251/repository/my-docker/', 'nexus-login') {
+                        def imageName = "add2vals"
+                        def imageTag = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
+                        def img = docker.build("${imageName}:${imageTag}")
+                        img.push(imageTag)
+                        image.push("latest")
+                    }
                 }
             }
         }
