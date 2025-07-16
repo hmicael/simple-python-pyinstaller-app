@@ -105,7 +105,7 @@ pipeline {
                             def imageTag = "${env.BUILD_ID}"
                             def img = docker.build("${registryOwner}/${imageName}")
                             img.push(imageTag)
-                            image.push("latest")
+                            img.push("latest")
                         }
                     }
                 }
