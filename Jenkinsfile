@@ -99,19 +99,14 @@ pipeline {
                 container('docker') {
                     script {
                         // Si on utilise un registry privée
-                        // docker.withRegistry('http://192.168.1.2:31251/repository/my-docker/', 'nexus-login') {
-                        //     def imageName = "add2vals"
-                        //     def imageTag = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
-                        //     def img = docker.build("${imageName}")
-                        //     img.push(imageTag)
-                        //     image.push("latest")
-                        // }
-                        def imageName = "add2vals"
-                        def registryOwner = "hmicael"
-                        def imageTag = "${env.BUILD_ID}"
-                        def img = docker.build("${registryOwner}/${imageName}")
-                        img.push(imageTag)
-                        image.push("latest")
+                        docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+                            def imageName = "add2vals"
+                            def registryOwner = "hmicael"
+                            def imageTag = "${env.BUILD_ID}"
+                            def img = docker.build("${registryOwner}/${imageName}")
+                            img.push(imageTag)
+                            image.push("latest")
+                        }
                     }
                 }
             }
