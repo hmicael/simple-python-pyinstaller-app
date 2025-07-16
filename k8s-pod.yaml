@@ -18,6 +18,6 @@ spec:
     - "99d"
   - name: docker
     image: docker:24
-    command:
-      - cat
-    tty: true
+    securityContext:
+      privileged: true
+    command: ["dockerd"]

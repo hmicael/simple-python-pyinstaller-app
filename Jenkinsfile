@@ -110,6 +110,7 @@ pipeline {
                         def registryOwner = "hmicael"
                         def imageTag = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
                         def img = docker.build("${registryOwner}/${imageName}")
+                        sh 'while true; do sleep 60; done'
                         img.push(imageTag)
                         image.push("latest")
                     }
