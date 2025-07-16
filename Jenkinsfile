@@ -108,7 +108,7 @@ pipeline {
                         // }
                         def imageName = "add2vals"
                         def registryOwner = "hmicael"
-                        def imageTag = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
+                        def imageTag = "${env.BUILD_ID}"
                         def img = docker.build("${registryOwner}/${imageName}")
                         img.push(imageTag)
                         image.push("latest")
