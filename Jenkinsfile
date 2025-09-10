@@ -3,6 +3,7 @@ pipeline {
         dockerfile {
             filename 'Dockerfile'
             dir 'python-agent'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
 
