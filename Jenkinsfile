@@ -34,13 +34,7 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('sonarqube-server') {// If you have configured more than one global server connection, you can specify its name as configured in Jenkins
-                    sh '''
-                        sonar-scanner \
-                            -Dsonar.projectKey=simple-python-pyinstaller-app \
-                            -Dsonar.sources=sources/ \
-                            -Dsonar.junit.reportPaths=test-reports/results.xml \
-                            -Dsonar.python.coverage.reportPaths=test-reports/coverage.xml
-                    '''
+                    sh 'echo "hello world'
                 }
             }
         }
