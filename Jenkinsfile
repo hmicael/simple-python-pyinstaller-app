@@ -1,20 +1,26 @@
 pipeline {
-    agent {
-        dockerfile {
-            filename 'Dockerfile'
-            dir 'python-agent'
-            // args '-v /some/volume:/data' si besoin
-        }
-    }
+    agent none
 
     stages {
         stage('Build') {
+            agent {
+                dockerfile {
+                    filename 'Dockerfile'
+                    dir 'python-agent'
+                }
+            }
             steps {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
 
         stage('Test') {
+            agent {
+                dockerfile {
+                    filename 'Dockerfile'
+                    dir 'python-agent'
+                }
+            }
             steps {
                 sh '''
                 pytest \
@@ -29,12 +35,12 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Sonarqub Analysis') {
             agent {
                 docker { image 'sonarsource/sonar-scanner-cli:latest' }
             }
             steps {
-                withSonarQubeEnv('sonarqube-server') {
+                withSonarQubeEnv('sonarqube-server') {// If you have configured more than one global server connection, you can specify its name as configured in Jenkins
                     sh '''
                         export SONAR_USER_HOME=$WORKSPACE/.sonar
                         sonar-scanner \
@@ -53,19 +59,26 @@ pipeline {
             }
             steps {
                 timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
+                waitForQualityGate abortPipeline: true
                 }
             }
         }
 
         stage('Deliver') {
+            agent {
+                dockerfile {
+                    filename 'Dockerfile'
+                    dir 'python-agent'
+                }
+            }
             steps {
-                sh 'pyinstaller --onefile sources/add2vals.py'
+                sh 'pyinstaller --onefile sources/add2vals.py' // créer un executable dist.add2vals
             }
             post {
                 success {
                     script {
                         def projectName = "add2vals"
+
                         nexusArtifactUploader(
                             nexusVersion: 'nexus3',
                             protocol: 'http',
@@ -88,16 +101,28 @@ pipeline {
                 failure {
                     echo 'La livraison a échoué. Aucun artefact ne sera publié.'
                 }
+                //always {
+                //    archiveArtifacts artifacts: 'dist/add2vals*'
+                //}
             }
         }
 
         stage("Build & Upload Docker image") {
             agent any
+            // agent {
+            //     docker {
+            //         image 'docker:latest'
+            //         args '--privileged -u root -v /var/run/docker.sock:/var/run/docker.sock'
+            //     }
+            // }
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-login') {
-                        def img = docker.build("hmicael/add2vals")
-                        img.push("${env.BUILD_NUMBER}")
+                        def imageName = "add2vals"
+                        def registryOwner = "hmicael"
+                        def imageTag = "${env.BUILD_NUMBER}"
+                        def img = docker.build("${registryOwner}/${imageName}")
+                        img.push(imageTag)
                         img.push("latest")
                     }
                 }
