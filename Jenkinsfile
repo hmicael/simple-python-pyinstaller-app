@@ -1,26 +1,19 @@
 pipeline {
-    agent any
+    agent {
+        dockerfile {
+            filename 'Dockerfile'
+            dir 'python-agent'
+        }
+    }
 
     stages {
         stage('Build') {
-            agent {
-                dockerfile {
-                    filename 'Dockerfile'
-                    dir 'python-agent'
-                }
-            }
             steps {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
 
         stage('Test') {
-            agent {
-                dockerfile {
-                    filename 'Dockerfile'
-                    dir 'python-agent'
-                }
-            }
             steps {
                 sh '''
                 pytest \
@@ -35,7 +28,30 @@ pipeline {
             }
         }
 
-        
+        stage('Sonarqub Analysis') {
+            agent {
+                docker { image 'sonarsource/sonar-scanner-cli:latest' }
+            }
+            steps {
+                withSonarQubeEnv('sonarqube-server') {// If you have configured more than one global server connection, you can specify its name as configured in Jenkins
+                    sh '''
+                        sonar-scanner \
+                            -Dsonar.projectKey=simple-python-pyinstaller-app \
+                            -Dsonar.sources=sources/ \
+                            -Dsonar.junit.reportPaths=test-reports/results.xml \
+                            -Dsonar.python.coverage.reportPaths=test-reports/coverage.xml
+                    '''
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
         stage('Deliver') {
             steps {
@@ -75,6 +91,9 @@ pipeline {
         }
 
         stage("Build & Upload Docker image") {
+            agent {
+                docker { image 'docker:latest' }
+            }
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-login') {
