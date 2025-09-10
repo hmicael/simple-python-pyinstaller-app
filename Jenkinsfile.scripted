@@ -1,0 +1,86 @@
+node { // agent none équivalent
+    stage('Build') {
+        docker.build('python-agent', '-f python-agent/Dockerfile .').inside {
+            sh 'python -m py_compile sources/add2vals.py sources/calc.py'
+        }
+    }
+
+    stage('Test') {
+        docker.build('python-agent', '-f python-agent/Dockerfile .').inside {
+            sh '''
+            pytest \
+            --junit-xml=test-reports/results.xml \
+            sources/test_calc.py
+            '''
+            // équivalent du post always junit
+            junit 'test-reports/results.xml'
+        }
+    }
+
+    stage('Sonarqube Analysis') {
+        docker.image('sonarsource/sonar-scanner-cli:latest').inside {
+            withSonarQubeEnv('sonarqube-server') {
+                sh '''
+                    export SONAR_USER_HOME=$WORKSPACE/.sonar
+                    sonar-scanner \
+                        -Dsonar.projectKey=simple-python-pyinstaller-app \
+                        -Dsonar.sources=sources/ \
+                        -Dsonar.junit.reportPaths=test-reports/results.xml \
+                        -Dsonar.python.coverage.reportPaths=test-reports/coverage.xml
+                '''
+            }
+        }
+    }
+
+    stage('Quality Gate') {
+        docker.image('sonarsource/sonar-scanner-cli:latest').inside {
+            timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+            }
+        }
+    }
+
+    stage('Deliver') {
+        docker.build('python-agent', '-f python-agent/Dockerfile .').inside {
+            sh 'pyinstaller --onefile sources/add2vals.py'
+
+            script {
+                try {
+                    def projectName = "add2vals"
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: '192.168.1.2:31251',
+                        groupId: 'add2vals',
+                        version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                        repository: 'simple-python-pyinstaller-app',
+                        credentialsId: 'nexus-repo-cred',
+                        artifacts: [
+                            [
+                                artifactId: projectName,
+                                classifier: '',
+                                file: "dist/${projectName}",
+                                type: 'bin'
+                            ]
+                        ]
+                    )
+                } catch (err) {
+                    echo 'La livraison a échoué. Aucun artefact ne sera publié.'
+                }
+            }
+        }
+    }
+
+    stage('Build & Upload Docker image') {
+        node { // utilise le nœud Jenkins pour docker host
+            docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-login') {
+                def imageName = "add2vals"
+                def registryOwner = "hmicael"
+                def imageTag = "${env.BUILD_NUMBER}"
+                def img = docker.build("${registryOwner}/${imageName}")
+                img.push(imageTag)
+                img.push("latest")
+            }
+        }
+    }
+}
