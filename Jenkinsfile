@@ -109,7 +109,10 @@ pipeline {
 
         stage("Build & Upload Docker image") {
             agent {
-                docker { image 'docker:latest' }
+                docker {
+                    image 'docker:latest'
+                    args '--privileged' 
+                }
             }
             steps {
                 script {
