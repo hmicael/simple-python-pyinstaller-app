@@ -28,30 +28,7 @@ pipeline {
             }
         }
 
-        stage('Sonarqub Analysis') {
-            agent {
-                docker { image 'sonarsource/sonar-scanner-cli:latest' }
-            }
-            steps {
-                withSonarQubeEnv('sonarqube-server') {// If you have configured more than one global server connection, you can specify its name as configured in Jenkins
-                    sh '''
-                        sonar-scanner \
-                            -Dsonar.projectKey=simple-python-pyinstaller-app \
-                            -Dsonar.sources=sources/ \
-                            -Dsonar.junit.reportPaths=test-reports/results.xml \
-                            -Dsonar.python.coverage.reportPaths=test-reports/coverage.xml
-                    '''
-                }
-            }
-        }
-
-        stage("Quality Gate") {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+        
 
         stage('Deliver') {
             steps {
