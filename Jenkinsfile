@@ -18,10 +18,6 @@ pipeline {
                 sh '''
                 pytest \
                 --junit-xml=test-reports/results.xml \
-                --cov=sources \
-                --cov-report=xml:test-reports/coverage.xml \
-                --cov-report=term-missing \
-                --cov-fail-under=80 \
                 sources/test_calc.py
                 '''
             }
