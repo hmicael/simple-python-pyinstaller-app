@@ -42,6 +42,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube-server') {// If you have configured more than one global server connection, you can specify its name as configured in Jenkins
                     sh '''
+                        export SONAR_USER_HOME=$WORKSPACE/.sonar
                         sonar-scanner \
                             -Dsonar.projectKey=simple-python-pyinstaller-app \
                             -Dsonar.sources=sources/ \
