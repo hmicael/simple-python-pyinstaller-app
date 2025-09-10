@@ -108,12 +108,13 @@ pipeline {
         }
 
         stage("Build & Upload Docker image") {
-            agent {
-                docker {
-                    image 'docker:latest'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
+            agent any
+            // agent {
+            //     docker {
+            //         image 'docker:latest'
+            //         args '--privileged -u root -v /var/run/docker.sock:/var/run/docker.sock'
+            //     }
+            // }
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-login') {
