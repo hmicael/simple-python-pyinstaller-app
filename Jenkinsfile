@@ -27,10 +27,14 @@ pipeline {
                 --junit-xml=test-reports/results.xml \
                 sources/test_calc.py
                 '''
+                sh '''
+                pytest --cov=sources \
+                --junit-xml=test-reports/coverage.xml
+                '''
             }
             post {
                 always {
-                    junit 'test-reports/results.xml'
+                    junit 'test-reports/*'
                 }
             }
         }
